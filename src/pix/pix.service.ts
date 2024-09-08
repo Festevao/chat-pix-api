@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as NodeCache from 'node-cache';
 import { PixApiTokenResponse } from 'src/types/PixApiTokenReponse';
 import { CreatePixChargeCnpjParams, CreatePixChargeCpfParams } from 'src/types/PixChargeParams';
+import { PixChargeResponse } from 'src/types/PixChargeResponse';
 
 @Injectable()
 export class PixService {
@@ -77,7 +78,7 @@ export class PixService {
 
   async createPixCharge(chargeParams: CreatePixChargeCnpjParams | CreatePixChargeCpfParams) {
     try {
-      const response = await this.axiosInstance.post('/v2/cob', chargeParams, {
+      const response = await this.axiosInstance.post<PixChargeResponse>('/v2/cob', chargeParams, {
         timeout: 10000,
         headers: new AxiosHeaders({
           Authorization: 'Bearer ' + (await this.getApiToken()).access_token,
