@@ -39,6 +39,7 @@
     "fs": "^0.0.1-security",
     "https": "^1.0.0",
     "jest-curso": "file:",
+    "ngrok": "^5.0.0-beta.2",
     "node-cache": "^5.1.2",
     "pg": "^8.12.0",
     "reflect-metadata": "^0.2.0",
