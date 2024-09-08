@@ -30,8 +30,8 @@ export class PixService {
       : this.configService.get<string>('EFI_CLIENT_SECRET_HOMOLOG');
 
     const certificate = nodeEnv === 'production'
-      ? fs.readFileSync(path.join(__dirname, '../certificates/efi-production.p12'))
-      : fs.readFileSync(path.join(__dirname, '../certificates/efi-homolog.p12'));
+      ? fs.readFileSync(path.join(__dirname, '../../certificates/efi-production.p12'))
+      : fs.readFileSync(path.join(__dirname, '../../certificates/efi-homolog.p12'));
 
     const agent = new https.Agent({
       pfx: certificate,
