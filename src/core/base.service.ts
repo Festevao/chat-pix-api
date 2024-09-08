@@ -1,11 +1,14 @@
-import { Repository, DeepPartial, FindOptionsWhere, FindOptionsOrder } from 'typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Repository, DeepPartial, FindOptionsWhere, FindOptionsOrder, Entity } from 'typeorm';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { BaseEntity } from './base.entity';
 
 @Injectable()
 export abstract class BaseService<T extends BaseEntity> {
-  constructor(protected readonly repository: Repository<T>) {}
+  constructor(
+    protected readonly repository: Repository<T>,
+    private readonly entityClass: new () => T,
+  ) {}
 
   async findAll(): Promise<T[]> {
     try {
@@ -30,8 +33,15 @@ export abstract class BaseService<T extends BaseEntity> {
   }
 
   async create(data: DeepPartial<T>): Promise<T> {
-    const entity = this.repository.create(data);
-    return this.repository.save(entity);
+    try {
+      const entity = this.repository.create(data);
+      return await this.repository.save(entity);
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException(`${this.entityClass.name} already exists.`);
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
   async update(id: string, data: QueryDeepPartialEntity<T>): Promise<T> {
