@@ -23,7 +23,7 @@ export class User extends BaseEntity {
   @Column('character varying', { name: 'phone', nullable: true })
   phone: string;
 
-  @Column('character varying', { name: 'document', nullable: true })
+  @Column('character varying', { name: 'document', nullable: true, unique: true })
   document: string;
 
   @Column('boolean', { name: 'is_google_login', default: false })
