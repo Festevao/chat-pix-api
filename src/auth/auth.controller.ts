@@ -55,6 +55,7 @@ export class AuthController {
   }
 
   @Put('change-password')
+  @ApiSecurity('Auth')
   @HttpCode(HttpStatus.OK)
   async changePassword(
     @Request() req,
