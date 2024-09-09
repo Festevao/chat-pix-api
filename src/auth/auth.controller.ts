@@ -9,7 +9,6 @@ import {
   UseGuards,
   Req,
   Res,
-  UnauthorizedException,
   ConflictException,
 } from '@nestjs/common';
 import { AuthGuard } from './guards/auth.guard';
@@ -97,7 +96,6 @@ export class AuthController {
 
   @Get('profile')
   async getProfile(@Request() req) {
-    console.log(req.user);
     return new ProfileResponseDTO(req.user);
   }
 
