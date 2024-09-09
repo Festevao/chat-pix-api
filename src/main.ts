@@ -4,6 +4,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { urlencoded, json } from 'express';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
+import { AuthGuard } from './auth/guards/auth.guard';
+import { JwtService } from '@nestjs/jwt';
+import { AuthService } from './auth/auth.service';
+import { Reflector } from '@nestjs/core';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -25,9 +30,11 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.useGlobalGuards(new AuthGuard(app.get(JwtService), app.get(AuthService), app.get(Reflector)));
 
   app.use(json({ limit: '500mb' }));
   app.use(urlencoded({ extended: true, limit: '500mb' }));
+  app.use(cookieParser());
 
   const port = process.env.PORT ?? 3000;
   process.env.PORT = port.toString();

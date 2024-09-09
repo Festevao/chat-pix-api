@@ -26,8 +26,13 @@ export class User extends BaseEntity {
   @Column('character varying', { name: 'document', nullable: true })
   document: string;
 
+  @Column('boolean', { name: 'is_google_login', default: false })
+  isGoogleLogin: boolean;
+
   @BeforeInsert()
   hashPassword() {
-    this.password = bcrypt.hashSync(this.password, 12);
+    if (!this.isGoogleLogin) {
+      this.password = bcrypt.hashSync(this.password, 12);
+    }
   }
 }

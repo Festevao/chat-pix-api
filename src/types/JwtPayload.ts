@@ -5,6 +5,7 @@ export interface JWTPayload {
   phone: string,
   document: string,
   emailVerified: boolean,
+  isGoogleLogin: boolean,
   iat: number,
 	exp: number,
 }

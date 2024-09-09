@@ -40,6 +40,7 @@ export abstract class BaseService<T extends BaseEntity> {
       if (error.code === '23505') {
         throw new ConflictException(`${this.entityClass.name} already exists.`);
       }
+      console.error(error);
       throw new InternalServerErrorException();
     }
   }
