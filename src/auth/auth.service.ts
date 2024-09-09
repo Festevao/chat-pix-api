@@ -90,6 +90,23 @@ export class AuthService {
     return new UserResponseDTO(result);
   }
 
+  async changePassword(userEmail: string, oldPassword: string, newPassword: string) {
+    const user = await this.userService.findByEmail(userEmail);
+
+    if (!user || user.isGoogleLogin) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordMatches = await bcrypt.compare(oldPassword, user.password);
+
+    if (!passwordMatches) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    user.password = newPassword;
+    await user.save();
+  }
+
   async getNewAccessToken(refreshToken: string): Promise<string> {
     try {
       const response = await axios.post(

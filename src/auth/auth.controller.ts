@@ -10,6 +10,7 @@ import {
   Req,
   Res,
   ConflictException,
+  Put,
 } from '@nestjs/common';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthService } from './auth.service';
@@ -22,6 +23,7 @@ import { ProfileResponseDTO } from './dto/profile-response.dto';
 import { RefreshTokenDTO } from './dto/refresh-token.dto';
 import { UserService } from 'src/user/user.service';
 import { Public } from './guards/public.guard';
+import { ChangePasswordDTO } from './dto/change-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -50,6 +52,15 @@ export class AuthController {
   @UseGuards(AuthGuard)
   async refresh(@Body() refreshTokenDto: RefreshTokenDTO) {
     return this.authService.refreshToken(refreshTokenDto.refresh_token);
+  }
+
+  @Put('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @Request() req,
+    @Body() changePasswordDto: ChangePasswordDTO,
+  ) {
+    await this.authService.changePassword(req.user.email, changePasswordDto.oldPassword, changePasswordDto.newPassword);
   }
 
   @Get('google')

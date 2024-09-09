@@ -1,5 +1,6 @@
 import {
   BeforeInsert,
+  BeforeUpdate,
   Column,
   Entity,
 } from 'typeorm';
@@ -30,6 +31,7 @@ export class User extends BaseEntity {
   isGoogleLogin: boolean;
 
   @BeforeInsert()
+  @BeforeUpdate()
   hashPassword() {
     if (!this.isGoogleLogin) {
       this.password = bcrypt.hashSync(this.password, 12);
