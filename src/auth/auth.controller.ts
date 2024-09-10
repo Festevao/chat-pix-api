@@ -47,7 +47,7 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   signUp(@Body() signUpDto: CreateUserDTO) {
-    return this.authService.singUp(signUpDto);
+    return this.authService.signUp(signUpDto);
   }
 
   @Post('refresh')

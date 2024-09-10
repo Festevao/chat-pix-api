@@ -96,30 +96,40 @@ export class AuthService {
     }
   }
 
-  async singUp(args: CreateUserDTO) {
+  async signUp(args: CreateUserDTO) {
     const result = await this.userService.create({
       ...args,
       emailVerified: false,
     });
 
-    const token = await this.tokenService.create({
-      user: result,
-      token: Math.random().toString(16).substring(2),
-      kind: TokenKind.VERIFY_EMAIL,
-    });
+    try {
+      const token = await this.tokenService.create({
+        user: result,
+        token: Math.random().toString(16).substring(2),
+        kind: TokenKind.VERIFY_EMAIL,
+      });
 
-    await this.emailService.sendTemplateEmail(
-      result.email,
-      '[ChatPIX] Confirmação de email',
-      'verify-email',
-      {
-        link: `${process.env.APP_ENDPOINT}/auth/verify-email`,
-        token: token.token,
-        name: result.fullName,
+      try {
+        await this.emailService.sendTemplateEmail(
+          result.email,
+          '[ChatPIX] Confirmação de email',
+          'verify-email',
+          {
+            link: `${process.env.APP_ENDPOINT}/auth/verify-email`,
+            token: token.token,
+            name: result.fullName,
+          }
+        );
+    
+        return new UserResponseDTO(result);
+      } catch(e) {
+        await token.remove();
+        throw e;
       }
-    );
-
-    return new UserResponseDTO(result);
+    } catch(e) {
+      await result.remove();
+      throw e;
+    }
   }
 
   async verifyEmail(token: string) {
