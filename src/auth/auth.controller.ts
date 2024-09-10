@@ -68,13 +68,6 @@ export class AuthController {
     await this.authService.changePassword(req.user.email, changePasswordDto.oldPassword, changePasswordDto.newPassword);
   }
 
-  @Post('forgot-password')
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDTO) {
-    await this.authService.sendEmailForgotPassword(forgotPasswordDto.email);
-  }
-
   @Get('verify-email')
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -99,6 +92,13 @@ export class AuthController {
 
       return res.render('email-error-verify');
     }
+  }
+
+  @Post('forgot-password')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDTO) {
+    await this.authService.sendEmailForgotPassword(forgotPasswordDto.email);
   }
 
   @Get('reset-password')
