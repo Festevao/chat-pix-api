@@ -5,7 +5,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { BaseEntity } from '../../core/base.entity';
-import { Token } from '../../token/entities/token.entity';
+import { Token } from '../../auth/entities/token.entity';
 import * as bcrypt from 'bcrypt';
 
 @Entity('user', { schema: process.env.DB_SCHEMA || 'public' })

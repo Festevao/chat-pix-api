@@ -5,7 +5,9 @@ import { JwtModule } from '@nestjs/jwt';7
 import { UserModule } from 'src/user/user.module';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { EmailModule } from 'src/email/email.module';
-import { TokenModule } from 'src/token/token.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Token } from './entities/token.entity';
+import { TokenService } from './token.service';
 
 @Module({
   imports:[
@@ -20,14 +22,15 @@ import { TokenModule } from 'src/token/token.module';
       };
     }
     }),
+    TypeOrmModule.forFeature([Token]),
     UserModule,
     EmailModule,
-    TokenModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
     GoogleStrategy,
+    TokenService,
   ],
 })
 export class AuthModule {}

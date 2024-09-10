@@ -14,8 +14,8 @@ import { UserResponseDTO } from '../user/dto/user-reponse.dto';
 import { LoginResponseDTO } from './dto/login-response.dto';
 import axios from 'axios';
 import { EmailService } from 'src/email/email.service';
-import { TokenService } from 'src/token/token.service';
-import { TokenKind } from 'src/token/entities/token.entity';
+import { TokenService } from 'src/auth/token.service';
+import { TokenKind } from 'src/auth/entities/token.entity';
 import * as NodeCache from 'node-cache';
 
 //TODO: change error handlind to transactions strategy
