@@ -50,6 +50,7 @@ export class AuthController {
     return this.authService.signUp(signUpDto);
   }
 
+  //TODO: review strategy
   @Post('refresh')
   @ApiSecurity('Auth')
   @UseGuards(AuthGuard)
