@@ -5,9 +5,9 @@ import * as https from 'https';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as NodeCache from 'node-cache';
-import { PixApiTokenResponse } from 'src/types/PixApiTokenReponse';
-import { CreatePixChargeCnpjParams, CreatePixChargeCpfParams } from 'src/types/PixChargeParams';
-import { PixChargeResponse } from 'src/types/PixChargeResponse';
+import { PixApiTokenResponse } from 'src/pix/types/PixApiTokenReponse';
+import { CreatePixChargeCnpjParams, CreatePixChargeCpfParams } from 'src/pix/types/PixChargeParams';
+import { PixChargeResponse } from 'src/pix/types/PixChargeResponse';
 
 @Injectable()
 export class PixService {
