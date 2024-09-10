@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify email</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: #CCCCCC;
+      font-family: 'Poppins', monospace;
+    }
+
+    .wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;      
+    }
+
+    .container {
+      width: 50%;
+      min-height: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-radius: 1rem;
+      background: white;
+      padding: 10%;
+      gap: 10%;
+    }
+
+    .title-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    h1, p {
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      padding: 0;
+    }
+
+    .bold {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+  </style>
+
+  <div class="wrapper">
+    <div class="container">
+      <div class="title-container">
+        <h1>Olá, {{name}}</h1>
+      </div>
+      <p>Seu email <span class="bold">{{email}}</span> foi verificado com sucesso na plataforma <span class="bold">ChatPix</span>.</p>
+    </div>
+  </div>
+
+</body>
+</html>

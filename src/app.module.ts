@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { UserModule } from './user/user.module';
 import typeORMConfig from 'db/typeORMConfig';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -8,6 +7,7 @@ import { DataSource } from 'typeorm';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
+import * as Ngrok from 'ngrok';
 
 @Module({
   imports: [
@@ -28,8 +28,24 @@ import { AuthModule } from './auth/auth.module';
         return dataSource;
       },
     }),
-    UserModule,
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private configService: ConfigService) {
+    this.connectNgrok();
+  }
+
+  private async connectNgrok() {
+    const port = parseInt(this.configService.get<string>('PORT') ?? '3000');
+    const env = this.configService.get<string>('NODE_ENV');
+    const appEndPoint = this.configService.get<string>('APP_ENDPOINT');
+
+    if (env !== 'production' && !isNaN(port) && !appEndPoint) {
+      const url = await Ngrok.connect(port);
+      this.configService.set<string>('APP_ENDPOINT', url);
+      process.env.APP_ENDPOINT = url;
+      console.log("Ngrok URL:", url);
+    }
+  }
+}

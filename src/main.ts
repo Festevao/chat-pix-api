@@ -9,6 +9,7 @@ import { AuthGuard } from './auth/guards/auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth/auth.service';
 import { Reflector } from '@nestjs/core';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -28,6 +29,9 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document, {
     customSiteTitle: 'ChatPix - API',
   });
+
+  app.setBaseViewsDir(join(__dirname, '..', 'views'));
+  app.setViewEngine('hbs');
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalGuards(new AuthGuard(app.get(JwtService), app.get(AuthService), app.get(Reflector)));

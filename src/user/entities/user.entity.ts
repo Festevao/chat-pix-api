@@ -1,10 +1,11 @@
 import {
   BeforeInsert,
-  BeforeUpdate,
   Column,
   Entity,
+  OneToMany,
 } from 'typeorm';
 import { BaseEntity } from '../../core/base.entity';
+import { Token } from '../../token/entities/token.entity';
 import * as bcrypt from 'bcrypt';
 
 @Entity('user', { schema: process.env.DB_SCHEMA || 'public' })
@@ -30,8 +31,10 @@ export class User extends BaseEntity {
   @Column('boolean', { name: 'is_google_login', default: false })
   isGoogleLogin: boolean;
 
+  @OneToMany(() => Token, (token) => token.user)
+  tokens: Token[];
+
   @BeforeInsert()
-  @BeforeUpdate()
   hashPassword() {
     if (!this.isGoogleLogin) {
       this.password = bcrypt.hashSync(this.password, 12);

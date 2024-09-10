@@ -1,18 +1,33 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDTO } from 'src/user/dto/create-user.dto';
-import { UserResponseDTO } from 'src/user/dto/user-reponse.dto';
+import { CreateUserDTO } from '../user/dto/create-user.dto';
+import { UserResponseDTO } from '../user/dto/user-reponse.dto';
 import { LoginResponseDTO } from './dto/login-response.dto';
 import axios from 'axios';
+import { EmailService } from 'src/email/email.service';
+import { TokenService } from 'src/token/token.service';
+import { TokenKind } from 'src/token/entities/token.entity';
+import * as NodeCache from 'node-cache';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private emailService: EmailService,
+    private tokenService: TokenService,
   ) {}
+
+  private cache = new NodeCache();
 
   async signIn(username: string, pass: string) {
     const user = await this.userService.findByEmail(username);
@@ -87,14 +102,83 @@ export class AuthService {
       emailVerified: false,
     });
 
+    const token = await this.tokenService.create({
+      user: result,
+      token: Math.random().toString(16).substring(2),
+      kind: TokenKind.VERIFY_EMAIL,
+    });
+
+    await this.emailService.sendTemplateEmail(
+      result.email,
+      '[ChatPIX] Confirmação de email',
+      'verify-email',
+      {
+        link: `${process.env.APP_ENDPOINT}/auth/verify-email`,
+        token: token.token,
+        name: result.fullName,
+      }
+    );
+
     return new UserResponseDTO(result);
+  }
+
+  async verifyEmail(token: string) {
+    const tokenInstance = await this.tokenService.findByToken(token);
+
+    if (!tokenInstance || tokenInstance.kind !== TokenKind.VERIFY_EMAIL) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (tokenInstance.user.isGoogleLogin) {
+      throw new UnprocessableEntityException('The user use google login');
+    }
+
+    tokenInstance.user.emailVerified = true;
+    await tokenInstance.user.save();
+    await tokenInstance.remove();
+
+    return tokenInstance;
+  }
+
+  async resetPassword(token: string, password: string) {
+    const tokenInstance = await this.tokenService.findByToken(token);
+
+    if (!tokenInstance || tokenInstance.kind !== TokenKind.VERIFY_EMAIL) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (tokenInstance.user.isGoogleLogin) {
+      throw new UnprocessableEntityException('The user use google login');
+    }
+
+    tokenInstance.user.password = bcrypt.hashSync(password, 12);
+    await tokenInstance.user.save();
+    await tokenInstance.remove();
+  }
+
+  async getToken(token: string) {
+    const tokenInstance = await this.tokenService.findByToken(token);
+
+    if (!tokenInstance || tokenInstance.kind !== TokenKind.VERIFY_EMAIL) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (tokenInstance.user.isGoogleLogin) {
+      throw new UnprocessableEntityException('The user use google login');
+    }
+
+    return tokenInstance;
   }
 
   async changePassword(userEmail: string, oldPassword: string, newPassword: string) {
     const user = await this.userService.findByEmail(userEmail);
 
-    if (!user || user.isGoogleLogin) {
-      throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isGoogleLogin) {
+      throw new UnprocessableEntityException('The user use google login');
     }
 
     const passwordMatches = await bcrypt.compare(oldPassword, user.password);
@@ -103,8 +187,43 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    user.password = newPassword;
+    user.password = bcrypt.hashSync(newPassword, 12);
     await user.save();
+  }
+
+  async sendEmailForgotPassword(userEmail: string) {
+    const cachedToken = this.cache.get<string>(`${userEmail}-send-forgot-email-chache`);
+    if (cachedToken) {
+      throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
+    }
+    this.cache.set<string>(`${userEmail}-send-forgot-email-chache`, 'sendded', 300);
+
+    const user = await this.userService.findByEmail(userEmail);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isGoogleLogin) {
+      throw new UnprocessableEntityException('The user use google login')
+    }
+
+    const token = await this.tokenService.create({
+      user,
+      token: Math.random().toString(16).substring(2),
+      kind: TokenKind.VERIFY_EMAIL,
+    });
+
+    await this.emailService.sendTemplateEmail(
+      user.email,
+      '[ChatPIX] Redefinir senha',
+      'recover-password',
+      {
+        link: `${process.env.APP_ENDPOINT}/auth/reset-password`,
+        token: token.token,
+        name: user.fullName,
+      }
+    );
   }
 
   async getNewAccessToken(refreshToken: string): Promise<string> {

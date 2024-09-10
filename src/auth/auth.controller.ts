@@ -11,19 +11,22 @@ import {
   Res,
   ConflictException,
   Put,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { AuthGuard as AuthGuardPassport } from '@nestjs/passport';
-import { CreateUserDTO } from 'src/user/dto/create-user.dto';
+import { CreateUserDTO } from '../user/dto/create-user.dto';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { LoginDTO } from './dto/login.dto';
 import { ProfileResponseDTO } from './dto/profile-response.dto';
 import { RefreshTokenDTO } from './dto/refresh-token.dto';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 import { Public } from './guards/public.guard';
 import { ChangePasswordDTO } from './dto/change-password.dto';
+import { ForgotPasswordDTO } from './dto/forgot-password.dto';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -62,6 +65,73 @@ export class AuthController {
     @Body() changePasswordDto: ChangePasswordDTO,
   ) {
     await this.authService.changePassword(req.user.email, changePasswordDto.oldPassword, changePasswordDto.newPassword);
+  }
+
+  @Post('forgot-password')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDTO) {
+    await this.authService.sendEmailForgotPassword(forgotPasswordDto.email);
+  }
+
+  @Get('verify-email')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(
+    @Res() res: Response,
+    @Query('token') token: string,
+    @Query('redirectUrl') redirectUrl?: string,
+  ) {
+    try {
+      const tokenInstance = await this.authService.verifyEmail(token);
+  
+      if (redirectUrl) {
+        return { url: redirectUrl };
+      }
+
+      return res.render('email-success-verify', {
+        name: tokenInstance?.user?.fullName ?? 'Usuário',
+        email: tokenInstance?.user?.email ?? '',
+      });
+    } catch(e) {
+      console.error(e);
+
+      return res.render('email-error-verify');
+    }
+  }
+
+  @Get('reset-password')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Res() res: Response,
+    @Query('token') token: string,
+    @Query('redirectUrl') redirectUrl?: string,
+  ) {
+    try {
+      const tokenInstance = await this.authService.getToken(token);
+  
+      return res.render('reset-password-form', {
+        name: tokenInstance?.user?.fullName ?? 'Usuário',
+        email: tokenInstance?.user?.email ?? '',
+        token,
+        redirectUrl,
+      });
+    } catch(e) {
+      console.error(e);
+
+      return res.render('reset-password-error');
+    }
+  }
+
+  @Post('reset-password')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async resetPasswordPost(
+    @Query('token') token: string,
+    @Body() resetPasswordDto: ResetPasswordDTO,
+  ) {
+    await this.authService.resetPassword(token, resetPasswordDto.password);
   }
 
   @Get('google')

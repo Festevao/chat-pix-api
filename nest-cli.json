@@ -28,6 +28,16 @@
         "include": "../utils/**/*",
         "outDir": "dist/utils",
         "watchAssets": true
+      },
+      {
+        "include": "../templates/**/*",
+        "outDir": "dist/templates",
+        "watchAssets": true
+      },
+      {
+        "include": "../views/**/*",
+        "outDir": "dist/views",
+        "watchAssets": true
       }
     ]
   }
