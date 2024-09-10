@@ -18,6 +18,8 @@ import { TokenService } from 'src/token/token.service';
 import { TokenKind } from 'src/token/entities/token.entity';
 import * as NodeCache from 'node-cache';
 
+//TODO: change error handlind to transactions strategy
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -224,16 +226,21 @@ export class AuthService {
       kind: TokenKind.VERIFY_EMAIL,
     });
 
-    await this.emailService.sendTemplateEmail(
-      user.email,
-      '[ChatPIX] Redefinir senha',
-      'recover-password',
-      {
-        link: `${process.env.APP_ENDPOINT}/auth/reset-password`,
-        token: token.token,
-        name: user.fullName,
-      }
-    );
+    try {
+      await this.emailService.sendTemplateEmail(
+        user.email,
+        '[ChatPIX] Redefinir senha',
+        'recover-password',
+        {
+          link: `${process.env.APP_ENDPOINT}/auth/reset-password`,
+          token: token.token,
+          name: user.fullName,
+        }
+      );
+    } catch(e) {
+      token.remove();
+      throw e;
+    }
   }
 
   async getNewAccessToken(refreshToken: string): Promise<string> {
