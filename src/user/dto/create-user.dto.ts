@@ -1,8 +1,10 @@
 import {
   IsEmail,
+  IsOptional,
   IsPhoneNumber,
   IsString,
   IsStrongPassword,
+  IsUrl,
   Matches,
 } from 'class-validator';
 import { IsCpfOrCnpj } from '../validators/validate-document.validator';
@@ -28,4 +30,12 @@ export class CreateUserDTO {
 
   @IsCpfOrCnpj()
   document: string;
+
+  @IsOptional()
+  @IsUrl({
+    protocols: process.env.NODE_ENV === 'production'
+      ? ['https']
+      : ['http', 'https'],
+  })
+  redirectUrl?: string;
 }

@@ -118,7 +118,7 @@ export class AuthService {
           'verify-email',
           {
             link: `${process.env.APP_ENDPOINT}/auth/verify-email`,
-            token: token.token,
+            token: `${token.token}${args.redirectUrl ? `&redirectUrl=${args.redirectUrl}` : ''}`,
             name: result.fullName,
           }
         );

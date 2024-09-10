@@ -87,7 +87,7 @@ export class AuthController {
       const tokenInstance = await this.authService.verifyEmail(token);
   
       if (redirectUrl) {
-        return { url: redirectUrl };
+        return res.redirect(redirectUrl);
       }
 
       return res.render('email-success-verify', {
