@@ -8,6 +8,7 @@ import { BaseEntity } from '../../core/base.entity';
 import { Token } from '../../auth/entities/token.entity';
 import * as bcrypt from 'bcrypt';
 import { Chat } from '../../chat/entities/chat.entity';
+import { Transaction } from '../../transaction/entities/transaction.entity';
 
 @Entity('user', { schema: process.env.DB_SCHEMA || 'public' })
 export class User extends BaseEntity {
@@ -40,6 +41,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Chat, (chat) => chat.user)
   chats: Chat[];
+
+  @OneToMany(() => Transaction, (transaction) => transaction.user)
+  transactions: Transaction[];
 
   @BeforeInsert()
   hashPassword() {
