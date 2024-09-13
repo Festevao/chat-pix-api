@@ -7,6 +7,7 @@ import {
 import { BaseEntity } from '../../core/base.entity';
 import { Token } from '../../auth/entities/token.entity';
 import * as bcrypt from 'bcrypt';
+import { Chat } from '../../chat/entities/chat.entity';
 
 @Entity('user', { schema: process.env.DB_SCHEMA || 'public' })
 export class User extends BaseEntity {
@@ -33,6 +34,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Token, (token) => token.user)
   tokens: Token[];
+
+  @OneToMany(() => Chat, (chat) => chat.user)
+  chats: Chat[];
 
   @BeforeInsert()
   hashPassword() {

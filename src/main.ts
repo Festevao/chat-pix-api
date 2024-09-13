@@ -21,6 +21,7 @@ async function bootstrap() {
     .setDescription('Documentação API do ChatPIX')
     .setVersion('1.0')
     .addTag('Auth')
+    .addTag('Chat')
     .addApiKey({ type: 'apiKey', name: 'Authorization', in: 'header' }, 'Auth')
     .build();
 

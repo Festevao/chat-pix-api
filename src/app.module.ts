@@ -7,6 +7,7 @@ import { DataSource } from 'typeorm';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
+import { ChatModule } from './chat/chat.module';
 import * as Ngrok from 'ngrok';
 
 @Module({
@@ -29,6 +30,7 @@ import * as Ngrok from 'ngrok';
       },
     }),
     AuthModule,
+    ChatModule,
   ],
 })
 export class AppModule {
