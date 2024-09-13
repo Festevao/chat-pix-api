@@ -4,10 +4,12 @@ import {
   Entity,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { BaseEntity } from '../../core/base.entity';
 import { createRandomToken } from '../../core/annotations/createRandomToken'
 import { User } from '../../user/entities/user.entity';
+import { Transaction } from '../../transaction/entities/transaction.entity';
 
 @Entity('chat', { schema: process.env.DB_SCHEMA || 'public' })
 export class Chat extends BaseEntity {
@@ -32,6 +34,9 @@ export class Chat extends BaseEntity {
   @ManyToOne(() => User, (user) => user.chats, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user: User;
+
+  @OneToMany(() => Transaction, (transaction) => transaction.chat)
+  transactions: Transaction[];
 
   @BeforeInsert()
   generateToken() {

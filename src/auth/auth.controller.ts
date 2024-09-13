@@ -12,6 +12,7 @@ import {
   ConflictException,
   Put,
   Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthService } from './auth.service';
@@ -20,13 +21,13 @@ import { AuthGuard as AuthGuardPassport } from '@nestjs/passport';
 import { CreateUserDTO } from '../user/dto/create-user.dto';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { LoginDTO } from './dto/login.dto';
-import { ProfileResponseDTO } from './dto/profile-response.dto';
 import { RefreshTokenDTO } from './dto/refresh-token.dto';
 import { UserService } from '../user/user.service';
 import { Public } from './guards/public.guard';
 import { ChangePasswordDTO } from './dto/change-password.dto';
 import { ForgotPasswordDTO } from './dto/forgot-password.dto';
 import { ResetPasswordDTO } from './dto/reset-password.dto';
+import { UserResponseDTO } from 'src/user/dto/user-reponse.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -155,6 +156,7 @@ export class AuthController {
     if (!user) {
       user = await this.userService.create({
         fullName: req.user.firstName + ' ' + req.user.lastName,
+        profileImage: req.user.picture,
         email: req.user.email,
         emailVerified: true,
         password: null,
@@ -179,7 +181,11 @@ export class AuthController {
 
   @Get('profile')
   async getProfile(@Request() req) {
-    return new ProfileResponseDTO(req.user);
+    const user = await this.userService.findById(req.user.sub);
+    if(!user) {
+      throw new NotFoundException('User not found');
+    }
+    return new UserResponseDTO(user);
   }
 
   @Get('logout')

@@ -17,6 +17,10 @@ export class CreateUserDTO {
   @IsEmail()
   email: string;
 
+  @IsOptional()
+  @IsString()
+  profileImage?: string;
+
   @IsStrongPassword({
     minLength: 8,
     minNumbers: 1,

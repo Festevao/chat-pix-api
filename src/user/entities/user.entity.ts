@@ -14,6 +14,9 @@ export class User extends BaseEntity {
   @Column('character varying', { name: 'full_name' })
   fullName: string;
 
+  @Column('character varying', { name: 'profile_image', nullable: true })
+  profileImage: string;
+
   @Column('character varying', { name: 'email', unique: true })
   email: string;
 
