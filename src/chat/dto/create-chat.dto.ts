@@ -1,25 +1,25 @@
 import {
   IsBoolean,
+  IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   Matches,
+  MaxLength,
   Min,  
 } from 'class-validator';
 
 export class CreateChatDTO {
-  @Matches(/^[a-zA-Z]+$/, {
-    message: 'Name must be a string without especial chars and numbers',
+  @Matches(/^[a-zA-Z_ ]+$/, {
+    message: 'Nick must be a string containing only letters, spaces, or underscores',
   })
+  @MaxLength(15)  
   @IsNotEmpty()
   name: string;
 
-  @IsNumber({
-    maxDecimalPlaces: 2
-  })
-  @Min(5)
-  minValue: number = 5;
+  @IsInt()
+  @Min(500)
+  minValue: number = 500;
 
   @IsOptional()
   @IsString()

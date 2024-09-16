@@ -30,6 +30,9 @@ export class User extends BaseEntity {
   @Column('character varying', { name: 'phone', nullable: true })
   phone: string;
 
+  @Column('character varying', { name: 'nick' })
+  nick: string;
+
   @Column('character varying', { name: 'document', nullable: true, unique: true })
   document: string;
 
@@ -42,7 +45,7 @@ export class User extends BaseEntity {
   @OneToMany(() => Chat, (chat) => chat.user)
   chats: Chat[];
 
-  @OneToMany(() => Transaction, (transaction) => transaction.user)
+  @OneToMany(() => Transaction, (transaction) => transaction.payer)
   transactions: Transaction[];
 
   @BeforeInsert()

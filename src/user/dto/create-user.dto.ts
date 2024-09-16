@@ -1,16 +1,17 @@
 import {
   IsEmail,
+  IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
   IsString,
   IsStrongPassword,
   IsUrl,
   Matches,
+  MaxLength,
 } from 'class-validator';
 import { IsCpfOrCnpj } from '../validators/validate-document.validator';
 
 export class CreateUserDTO {
-  @IsString()
   @Matches(/\b\w+\b\s+\b\w+\b/, { message: 'The text must contain at least two words' })
   fullName: string;
 
@@ -20,6 +21,13 @@ export class CreateUserDTO {
   @IsOptional()
   @IsString()
   profileImage?: string;
+
+  @Matches(/^[a-zA-Z_ ]+$/, {
+    message: 'Nick must be a string containing only letters, spaces, or underscores',
+  })
+  @MaxLength(15)  
+  @IsNotEmpty()
+  nick: string;
 
   @IsStrongPassword({
     minLength: 8,

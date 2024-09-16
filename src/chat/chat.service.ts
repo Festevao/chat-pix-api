@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { BaseService } from '../core/base.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { FindOptionsWhere, QueryFailedError, Repository } from 'typeorm';
 import { Chat } from './entities/chat.entity';
 import { CreateChatDTO } from './dto/create-chat.dto';
 import { UpdateChatDTO } from './dto/update-chat.dto';
@@ -15,12 +15,30 @@ export class ChatService extends BaseService<Chat> {
     super(repository, Chat);
   }
 
+  async findWithOwner(chatId: string, args?: FindOptionsWhere<Chat>) {
+    const returnValue = await this.repository.findOne({
+      where: {
+        ...args,
+        id: chatId,
+        isActive: true,
+      },
+      relations: {
+        user: true,
+      }
+    });
+    if (!returnValue) {
+      throw new NotFoundException(`Chat not found`);
+    }
+
+    return returnValue;
+  }
+
   async findByUser(userId: string) {
     return await this.repository.find({
       where: {
         userId,
       }
-    })
+    });
   }
 
   async createByUser(userId: string, dto: CreateChatDTO) {
@@ -84,5 +102,22 @@ export class ChatService extends BaseService<Chat> {
   
       throw new InternalServerErrorException('An unexpected error occurred');
     }
+  }
+
+  async findAllByOwnerNick(nick: string) {
+    const entities = await this.repository.find({
+      where: {
+        isActive: true,
+        user: {
+          nick,
+        },
+      },
+    });
+
+    if (!entities || entities.length === 0) {
+      throw new NotFoundException(`Chats not found`);
+    }
+
+    return entities;
   }
 }

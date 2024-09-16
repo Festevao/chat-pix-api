@@ -23,17 +23,20 @@ export class Transaction extends BaseEntity {
   @Column('enum', { name: 'status', enum: TransactionStatus })
   status: TransactionStatus;
 
+  @Column('character varying', { name: 'pix_copia_e_cola' })
+  pixCopiaECola: string;
+
   @Column('uuid', { name: 'chat_id' })
   chatId: string;
 
-  @Column('uuid', { name: 'user_id', nullable: true })
-  userId: string;
+  @Column('uuid', { name: 'payer_id', nullable: true })
+  payerId: string;
 
   @ManyToOne(() => Chat, (chat) => chat.transactions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'chat_id', referencedColumnName: 'id' })
   chat: Chat;
 
   @ManyToOne(() => User, (user) => user.transactions, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  user: User;
+  @JoinColumn({ name: 'payer_id', referencedColumnName: 'id' })
+  payer: User;
 }

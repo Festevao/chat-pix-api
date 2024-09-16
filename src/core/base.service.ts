@@ -27,7 +27,7 @@ export abstract class BaseService<T extends BaseEntity> {
       id: id,
     } as unknown as FindOptionsWhere<T>);
     if (!entity) {
-      throw new NotFoundException(`Entity with ID ${id} not found`);
+      throw new NotFoundException(`${this.entityClass.name} not found`);
     }
     return entity;
   }
