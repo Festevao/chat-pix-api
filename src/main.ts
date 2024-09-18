@@ -23,6 +23,7 @@ async function bootstrap() {
     .addTag('Auth')
     .addTag('Chat')
     .addTag('Transaction')
+    .addTag('Wallet')
     .addApiKey({ type: 'apiKey', name: 'Authorization', in: 'header' }, 'Auth')
     .build();
 

@@ -1,14 +1,18 @@
 import {
+  AfterRemove,
   BeforeInsert,
   Column,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { BaseEntity } from '../../core/base.entity';
 import { Token } from '../../auth/entities/token.entity';
 import * as bcrypt from 'bcrypt';
 import { Chat } from '../../chat/entities/chat.entity';
 import { Transaction } from '../../transaction/entities/transaction.entity';
+import { Wallet } from '../../wallet/entities/wallet.entity';
 
 @Entity('user', { schema: process.env.DB_SCHEMA || 'public' })
 export class User extends BaseEntity {
@@ -39,6 +43,13 @@ export class User extends BaseEntity {
   @Column('boolean', { name: 'is_google_login', default: false })
   isGoogleLogin: boolean;
 
+  @Column('uuid', { name: 'wallet_id' })
+  walletId: string;
+
+  @OneToOne(() => Wallet, (wallet) => wallet.user)
+  @JoinColumn({ name: 'wallet_id', referencedColumnName: 'id' })
+  wallet: Wallet;
+
   @OneToMany(() => Token, (token) => token.user)
   tokens: Token[];
 
@@ -52,6 +63,13 @@ export class User extends BaseEntity {
   hashPassword() {
     if (!this.isGoogleLogin) {
       this.password = bcrypt.hashSync(this.password, 12);
+    }
+  }
+
+  @AfterRemove()
+  async removeWallet() {
+    if (this.wallet) {
+      await this.wallet.remove();
     }
   }
 }

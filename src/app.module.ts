@@ -9,6 +9,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
 import { TransactionModule } from './transaction/transaction.module';
+import { WalletModule } from './wallet/wallet.module';
 import * as Ngrok from 'ngrok';
 
 @Module({
@@ -33,6 +34,7 @@ import * as Ngrok from 'ngrok';
     AuthModule,
     ChatModule,
     TransactionModule,
+    WalletModule,
   ],
 })
 export class AppModule {
