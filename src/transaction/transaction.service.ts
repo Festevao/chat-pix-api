@@ -54,7 +54,7 @@ export class TransactionService extends BaseService<Transaction> {
       calendario: {
         expiracao: 3600,
       },
-      chave: chat.user.document,
+      chave: process.env.EFI_PIX_KEY,
       devedor: payerDocumentInfo,
       infoAdicionais: [
         {

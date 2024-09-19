@@ -1,7 +1,8 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module } from '@nestjs/common';
 import { PixService } from './pix.service';
 import { PixController } from './pix.controller';
 import { TransactionModule } from 'src/transaction/transaction.module';
+import { HMACValidationMiddleware } from './middlewares/hmac.middleware';
 
 @Module({
   imports: [forwardRef(() => TransactionModule)],
@@ -9,4 +10,10 @@ import { TransactionModule } from 'src/transaction/transaction.module';
   providers: [PixService],
   exports: [PixService],
 })
-export class PixModule {}
+export class PixModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(HMACValidationMiddleware)
+      .forRoutes('pix/webhook-efi');
+  }
+}

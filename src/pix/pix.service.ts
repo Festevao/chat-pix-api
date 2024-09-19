@@ -9,6 +9,7 @@ import { PixApiTokenResponse } from 'src/pix/types/PixApiTokenReponse';
 import { CreatePixChargeCnpjParams, CreatePixChargeCpfParams } from 'src/pix/types/PixChargeParams';
 import { PixChargeResponse } from 'src/pix/types/PixChargeResponse';
 import { delay } from 'src/utils/delay';
+import { generateHMAC } from 'src/utils/generateHmacHash';
 
 @Injectable()
 export class PixService {
@@ -80,6 +81,7 @@ export class PixService {
   }
 
   async createPixCharge(chargeParams: CreatePixChargeCnpjParams | CreatePixChargeCpfParams) {
+    console.log(chargeParams);
     try {
       const response = await this.axiosInstance.post<PixChargeResponse>('/v2/cob', chargeParams, {
         timeout: 10000,
@@ -99,10 +101,12 @@ export class PixService {
   }
 
   async createWebhook() {
+    const webhookUrl = `${process.env.APP_ENDPOINT}/pix/webhook-efi`;
+    const hmac = generateHMAC(process.env.HMAC_KEY, webhookUrl);
     try {
       await this.axiosInstance.put(`/v2/webhook/${process.env.EFI_PIX_KEY}`,
         {
-          webhookUrl: `${process.env.APP_ENDPOINT}/pix/webhook-efi/?ignorar=`,
+          webhookUrl: `${process.env.APP_ENDPOINT}/pix/webhook-efi?hmac=${hmac}&ignorar=`,
         },
         {
           timeout: 10000,
@@ -117,6 +121,7 @@ export class PixService {
       if (isAxiosError(e)) {
         console.log(e.response.data);
       }
+      console.log(webhookUrl);
       throw new Error();
     }
   }
@@ -142,16 +147,16 @@ export class PixService {
   }
 
   async configWebhooks(retryAttempts = 0) {
+    await delay(2000);
     if (retryAttempts > 5) {
       console.error('Max retry attempts at efi webhook creation');
       process.exit(1);
     }
     if (!process.env.APP_ENDPOINT) {
-      await delay(2000);
       await this.configWebhooks(retryAttempts + 1);
       return;
     }
-    console.log(await this.getWebhooks());
     await this.createWebhook();
+    console.log(await this.getWebhooks());
   }
 }

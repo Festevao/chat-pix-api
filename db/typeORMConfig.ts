@@ -24,16 +24,16 @@ const config: TypeOrmModuleOptions = {
     process.env.NODE_ENV !== 'production'
       ? ['query', 'error']
       : [],
-  ssl:
-    process.env.NODE_ENV === 'production'
-      ? {
-          rejectUnauthorized: true,
-          ca: Buffer.from(
-            process.env.RDS_CA as string,
-            'base64',
-          ).toString('utf8'),
-        }
-      : false,
+  ssl: false
+    // process.env.NODE_ENV === 'production'
+    //   ? {
+    //       rejectUnauthorized: true,
+    //       ca: Buffer.from(
+    //         process.env.RDS_CA as string,
+    //         'base64',
+    //       ).toString('utf8'),
+    //     }
+    //   : false,
 }
 
 export default registerAs('typeORMConfig', () => config)

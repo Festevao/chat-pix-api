@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { PixService } from './pix.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/auth/guards/public.guard';
@@ -15,8 +15,13 @@ export class PixController {
 
   @Post('webhook-efi')
   @HttpCode(HttpStatus.OK)
-  async webhookEfi(@Body() body: any) {
+  async webhookEfiInit(
+    @Req() req,
+    @Body() body: any,
+  ) {
+    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     console.log('[POST] /pix/webhook-efi:');
+    console.log('Client IP:', clientIp);
     console.log(body);
     return "200";
   }
