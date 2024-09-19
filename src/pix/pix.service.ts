@@ -8,6 +8,7 @@ import * as NodeCache from 'node-cache';
 import { PixApiTokenResponse } from 'src/pix/types/PixApiTokenReponse';
 import { CreatePixChargeCnpjParams, CreatePixChargeCpfParams } from 'src/pix/types/PixChargeParams';
 import { PixChargeResponse } from 'src/pix/types/PixChargeResponse';
+import { delay } from 'src/utils/delay';
 
 @Injectable()
 export class PixService {
@@ -44,6 +45,8 @@ export class PixService {
         : this.configService.get<string>('EFI_HOMOLOG_ENDPOINT'),
       httpsAgent: agent,
     });
+
+    this.configWebhooks();
   }
 
   private async getApiToken() {
@@ -93,5 +96,62 @@ export class PixService {
       }
       throw e;
     }
+  }
+
+  async createWebhook() {
+    try {
+      await this.axiosInstance.put(`/v2/webhook/${process.env.EFI_PIX_KEY}`,
+        {
+          webhookUrl: `${process.env.APP_ENDPOINT}/pix/webhook-efi/?ignorar=`,
+        },
+        {
+          timeout: 10000,
+          headers: new AxiosHeaders({
+            Authorization: 'Bearer ' + (await this.getApiToken()).access_token,
+            'Content-Type': 'application/json',
+            'x-skip-mtls-checking': true,
+          }),
+        }
+      );
+    } catch (e) {
+      if (isAxiosError(e)) {
+        console.log(e.response.data);
+      }
+      throw new Error();
+    }
+  }
+
+  async getWebhooks() {
+    try {
+      const response = await this.axiosInstance.get(`/v2/webhook?inicio=2024-09-18T20:26:00Z&fim=${new Date().toISOString()}`, {
+        timeout: 10000,
+        headers: new AxiosHeaders({
+          Authorization: 'Bearer ' + (await this.getApiToken()).access_token,
+          'Content-Type': 'application/json',
+          'x-skip-mtls-checking': true,
+        }),
+      });
+
+      return response.data.webhooks ?? [];
+    } catch (e) {
+      if (isAxiosError(e)) {
+        console.log(e.response.data);
+      }
+      throw e;
+    }
+  }
+
+  async configWebhooks(retryAttempts = 0) {
+    if (retryAttempts > 5) {
+      console.error('Max retry attempts at efi webhook creation');
+      process.exit(1);
+    }
+    if (!process.env.APP_ENDPOINT) {
+      await delay(2000);
+      await this.configWebhooks(retryAttempts + 1);
+      return;
+    }
+    console.log(await this.getWebhooks());
+    await this.createWebhook();
   }
 }

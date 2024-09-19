@@ -24,6 +24,7 @@ async function bootstrap() {
     .addTag('Chat')
     .addTag('Transaction')
     .addTag('Wallet')
+    .addTag('Pix')
     .addApiKey({ type: 'apiKey', name: 'Authorization', in: 'header' }, 'Auth')
     .build();
 

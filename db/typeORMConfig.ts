@@ -19,6 +19,7 @@ const config: TypeOrmModuleOptions = {
   synchronize: false,
   migrationsRun: process.env.NODE_ENV !== 'production',
   migrations: [__dirname + "/typeORM_migrations/*{.ts,.js}"],
+  retryAttempts: 10,
   logging:
     process.env.NODE_ENV !== 'production'
       ? ['query', 'error']

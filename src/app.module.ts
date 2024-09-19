@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { WalletModule } from './wallet/wallet.module';
+import { PixModule } from './pix/pix.module';
 import * as Ngrok from 'ngrok';
 
 @Module({
@@ -35,6 +36,7 @@ import * as Ngrok from 'ngrok';
     ChatModule,
     TransactionModule,
     WalletModule,
+    PixModule,
   ],
 })
 export class AppModule {
