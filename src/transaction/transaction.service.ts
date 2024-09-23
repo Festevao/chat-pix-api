@@ -170,8 +170,6 @@ export class TransactionService extends BaseService<Transaction> {
       throw new NotFoundException(`Transaction not found`);
     }
 
-    console.log('value:', value);
-
     entity.chat.user.wallet.balance += Math.ceil(value * 0.98);
     admin.wallet.balance += Math.floor(value * 0.02);
     entity.status = TransactionStatus.CONCLUIDA;
