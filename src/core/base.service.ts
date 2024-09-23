@@ -14,7 +14,7 @@ export abstract class BaseService<T extends BaseEntity> {
     try {
       return this.repository.find();
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosHeaders, AxiosInstance, isAxiosError } from 'axios';
 import * as https from 'https';
@@ -10,6 +10,8 @@ import { CreatePixChargeCnpjParams, CreatePixChargeCpfParams } from 'src/pix/typ
 import { PixChargeResponse } from 'src/pix/types/PixChargeResponse';
 import { delay } from 'src/utils/delay';
 import { generateHMAC } from 'src/utils/generateHmacHash';
+import { TransactionService } from 'src/transaction/transaction.service';
+import { TransactionStatus } from 'src/transaction/types/TransactionStatus';
 
 @Injectable()
 export class PixService {
@@ -21,7 +23,11 @@ export class PixService {
   };
   private axiosInstance: AxiosInstance;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @Inject(forwardRef(() => TransactionService)) 
+    private transactionService: TransactionService,
+  ) {
     const nodeEnv = this.configService.get<string>('NODE_ENV');
 
     this.efiCredentials.client_id = nodeEnv === 'production'
@@ -74,14 +80,13 @@ export class PixService {
       return response.data;
     } catch(e) {
       if (isAxiosError(e)) {
-        console.log(e.response.data);
+        console.error(e.response.data);
       }
       throw e;
     }
   }
 
   async createPixCharge(chargeParams: CreatePixChargeCnpjParams | CreatePixChargeCpfParams) {
-    console.log(chargeParams);
     try {
       const response = await this.axiosInstance.post<PixChargeResponse>('/v2/cob', chargeParams, {
         timeout: 10000,
@@ -94,7 +99,26 @@ export class PixService {
       return response.data;
     } catch (e) {
       if (isAxiosError(e)) {
-        console.log(e.response.data);
+        console.error(e.response.data);
+      }
+      throw e;
+    }
+  }
+
+  async getPixCharge(txid: string) {
+    try {
+      const response = await this.axiosInstance.get(`/v2/cob/${txid}`, {
+        timeout: 10000,
+        headers: new AxiosHeaders({
+          Authorization: 'Bearer ' + (await this.getApiToken()).access_token,
+          'Content-Type': 'application/json',
+        }),
+      });
+
+      return response.data;
+    } catch (e) {
+      if (isAxiosError(e)) {
+        console.error(e.response.data);
       }
       throw e;
     }
@@ -119,9 +143,8 @@ export class PixService {
       );
     } catch (e) {
       if (isAxiosError(e)) {
-        console.log(e.response.data);
+        console.error(e.response.data);
       }
-      console.log(webhookUrl);
       throw new Error();
     }
   }
@@ -140,7 +163,7 @@ export class PixService {
       return response.data.webhooks ?? [];
     } catch (e) {
       if (isAxiosError(e)) {
-        console.log(e.response.data);
+        console.error(e.response.data);
       }
       throw e;
     }
@@ -158,5 +181,53 @@ export class PixService {
     }
     await this.createWebhook();
     console.log(await this.getWebhooks());
+  }
+
+  async processPixInfo(pixInfo: any) {
+    if (!pixInfo.devolucoes) {
+      await this.transactionService.updateStatusByTxid(pixInfo.txid, TransactionStatus.CONCLUIDA);
+    }
+  }
+
+  async handleWebhookMessage(message: any) {
+    if (message.pix && Array.isArray(message.pix)) {
+      for (const pixInfo of message.pix) {
+        if (typeof pixInfo.txid === 'string' && pixInfo.txid.length > 0) {
+          await this.processPixInfo(pixInfo);
+        }
+      }
+    }
+  }
+
+  async performRetractablePixCheck() {
+    const entities = await this.transactionService.findAllActive();
+
+    while(entities.length > 0) {
+      const splicedEntities = entities.splice(0, 5);
+      await Promise.all(
+        splicedEntities.map(async (entity) => {
+          try {
+            const response = await this.getPixCharge(entity.txid);
+
+            if (
+              response
+                && typeof response.txid === 'string'
+                && response.status === TransactionStatus.CONCLUIDA
+                && (
+                  !response.pix
+                  || (
+                    Array.isArray(response.pix)
+                      && !(response.pix as any[]).some((pixData) => pixData.devolucoes)
+                  )
+                )
+            ) {
+              await this.transactionService.updateStatusByTxid(response.txid, TransactionStatus.CONCLUIDA);
+            }
+          } catch(e) {
+            console.error(`Error on get pix status from txid ${entity.txid}:`);
+          }
+        })
+      );
+    }
   }
 }

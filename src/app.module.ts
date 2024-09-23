@@ -12,6 +12,7 @@ import { TransactionModule } from './transaction/transaction.module';
 import { WalletModule } from './wallet/wallet.module';
 import { PixModule } from './pix/pix.module';
 import * as Ngrok from 'ngrok';
+import { PixService } from './pix/pix.service';
 
 @Module({
   imports: [
@@ -34,14 +35,24 @@ import * as Ngrok from 'ngrok';
     }),
     AuthModule,
     ChatModule,
+    PixModule,
     TransactionModule,
     WalletModule,
-    PixModule,
   ],
 })
 export class AppModule {
-  constructor(private configService: ConfigService) {
-    this.connectNgrok();
+  constructor(
+    private pixService: PixService,
+    private configService: ConfigService,
+  ) {}
+  
+  async onApplicationBootstrap() {
+    await this.connectNgrok();
+  
+    const performRetractablePixCheck = this.configService.get<string>('PERFORM_RETRACTABLE_PIX_CHECK');
+    if (performRetractablePixCheck.toLowerCase() === 'true') {
+      await this.pixService.performRetractablePixCheck();
+    }
   }
 
   private async connectNgrok() {

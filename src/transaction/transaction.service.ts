@@ -142,4 +142,16 @@ export class TransactionService extends BaseService<Transaction> {
 
     return entity;
   }
+
+  async updateStatusByTxid(transactionId: string, status: TransactionStatus) {
+    await this.repository.update({ txid: transactionId }, { status });
+  }
+
+  async findAllActive() {
+    return await this.repository.find({
+      where: {
+        status: TransactionStatus.ATIVA,
+      },
+    });
+  }
 }
