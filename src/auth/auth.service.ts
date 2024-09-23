@@ -20,6 +20,8 @@ import * as NodeCache from 'node-cache';
 
 //TODO: change error handlind to transactions strategy
 
+const refreshTokens: { value: string }[] = [];
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -54,10 +56,12 @@ export class AuthService {
       isGoogleLogin: user.isGoogleLogin,
     };
     
-    const expires_in = process.env.NODE_ENV === 'production' ? 300 : 86400;
+    const expires_in = 300;
     
-    const access_token = await this.jwtService.signAsync(payload);
-    const refresh_token = await this.jwtService.signAsync(payload, { expiresIn: '7d' });
+    const access_token = await this.jwtService.signAsync({ ...payload, type: 'access' });
+    const refresh_token = await this.jwtService.signAsync({ ...payload, type: 'refresh' }, { expiresIn: '1h' });
+
+    refreshTokens.push({ value: refresh_token });
 
     return new LoginResponseDTO({
       access_token,
@@ -67,14 +71,22 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string) {
+    const token = refreshTokens.find(({ value }) => value === refreshToken);
+    if (!token) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    
+    const decoded = await this.jwtService.verifyAsync(refreshToken);
+    if (decoded.type !== 'refresh') {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const user = await this.userService.findById(decoded.sub);
+    
+    if (!user) {
+      throw new UnauthorizedException('Invalid token');
+    }
     try {
-      const decoded = await this.jwtService.verifyAsync(refreshToken);
-      const user = await this.userService.findById(decoded.sub);
-
-      if (!user) {
-        throw new UnauthorizedException('Invalid token');
-      }
-
       const payload = {
         sub: user.id,
         fullName: user.fullName,
@@ -85,12 +97,15 @@ export class AuthService {
       };
 
       const access_token = await this.jwtService.signAsync(payload);
+      const refresh_token = await this.jwtService.signAsync({ ...payload, type: 'refresh' }, { expiresIn: '1h' });
 
-      const expires_in = process.env.NODE_ENV === 'production' ? 300 : 86400;
+      token.value = refresh_token;
+
+      const expires_in = 300;
 
       return new LoginResponseDTO({
         access_token,
-        refresh_token: refreshToken,
+        refresh_token,
         expires_in,
       });
     } catch (error) {

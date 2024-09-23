@@ -51,9 +51,8 @@ export class AuthController {
     return this.authService.signUp(signUpDto);
   }
 
-  //TODO: review strategy
   @Post('refresh')
-  @ApiSecurity('Auth')
+  @Public()
   @UseGuards(AuthGuard)
   async refresh(@Body() refreshTokenDto: RefreshTokenDTO) {
     return this.authService.refreshToken(refreshTokenDto.refresh_token);
