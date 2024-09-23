@@ -179,20 +179,28 @@ export class PixService {
       await this.configWebhooks(retryAttempts + 1);
       return;
     }
-    await this.createWebhook();
+    try {
+      await this.createWebhook();
+    } catch {
+      await this.configWebhooks(retryAttempts + 1);
+    }
     console.log(await this.getWebhooks());
   }
 
   async processPixInfo(pixInfo: any) {
     if (!pixInfo.devolucoes) {
-      await this.transactionService.updateStatusByTxid(pixInfo.txid, TransactionStatus.CONCLUIDA);
+      await this.transactionService.confirmChagePayment(pixInfo.txid, parseFloat(pixInfo.valor) * 100);
     }
   }
 
   async handleWebhookMessage(message: any) {
     if (message.pix && Array.isArray(message.pix)) {
       for (const pixInfo of message.pix) {
-        if (typeof pixInfo.txid === 'string' && pixInfo.txid.length > 0) {
+        if (
+          typeof pixInfo.txid === 'string'
+            && pixInfo.txid.length > 0
+            && pixInfo.valor
+        ) {
           await this.processPixInfo(pixInfo);
         }
       }
@@ -202,32 +210,28 @@ export class PixService {
   async performRetractablePixCheck() {
     const entities = await this.transactionService.findAllActive();
 
-    while(entities.length > 0) {
-      const splicedEntities = entities.splice(0, 5);
-      await Promise.all(
-        splicedEntities.map(async (entity) => {
-          try {
-            const response = await this.getPixCharge(entity.txid);
+    for (const entity of entities) {
+      try {
+        const response = await this.getPixCharge(entity.txid);
 
-            if (
-              response
-                && typeof response.txid === 'string'
-                && response.status === TransactionStatus.CONCLUIDA
-                && (
-                  !response.pix
-                  || (
-                    Array.isArray(response.pix)
-                      && !(response.pix as any[]).some((pixData) => pixData.devolucoes)
-                  )
-                )
-            ) {
-              await this.transactionService.updateStatusByTxid(response.txid, TransactionStatus.CONCLUIDA);
-            }
-          } catch(e) {
-            console.error(`Error on get pix status from txid ${entity.txid}:`);
-          }
-        })
-      );
+        if (
+          response
+            && response.valor?.original
+            && typeof response.txid === 'string'
+            && response.status === TransactionStatus.CONCLUIDA
+            && (
+              !response.pix
+              || (
+                Array.isArray(response.pix)
+                  && !(response.pix as any[]).some((pixData) => pixData.devolucoes)
+              )
+            )
+        ) {
+          await this.transactionService.confirmChagePayment(response.txid, parseFloat(response.valor.original) * 100);
+        }
+      } catch(e) {
+        console.error(`Error on get pix status from txid ${entity.txid}:`);
+      }
     }
   }
 }

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, UnprocessableEntityException } from '@ne
 import { BaseService } from 'src/core/base.service';
 import { Transaction } from './entities/transaction.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { CreateTransactionDTO } from './dto/create-transaction.dto';
 import { PixService } from 'src/pix/pix.service';
 import { UserService } from 'src/user/user.service';
@@ -11,6 +11,7 @@ import { validateDocument } from 'src/utils/filterDocument';
 import { DevedorCnpj, DevedorCpf } from 'src/pix/types/PixChargeParams';
 import { TransactionResponseDTO } from './dto/transaction-response.dto';
 import { TransactionStatus } from './types/TransactionStatus';
+import { WalletService } from 'src/wallet/wallet.service';
 
 @Injectable()
 export class TransactionService extends BaseService<Transaction> {
@@ -20,6 +21,7 @@ export class TransactionService extends BaseService<Transaction> {
     private pixService: PixService,
     private userService: UserService,
     private chatService: ChatService,
+    private walletService: WalletService,
   ) {
     super(repository, Transaction);
   }
@@ -143,15 +145,36 @@ export class TransactionService extends BaseService<Transaction> {
     return entity;
   }
 
-  async updateStatusByTxid(transactionId: string, status: TransactionStatus) {
-    await this.repository.update({ txid: transactionId }, { status });
-  }
-
   async findAllActive() {
     return await this.repository.find({
       where: {
         status: TransactionStatus.ATIVA,
       },
     });
+  }
+
+  async confirmChagePayment(txid: string, value: number) {
+    const entity = await this.repository.findOne({
+      where: {
+        txid,
+        status: Not(TransactionStatus.CONCLUIDA),
+      },
+      relations: {
+        chat: {
+          user: {
+            wallet: true,
+          },
+        },
+      },
+    });
+    if (!entity) {
+      throw new NotFoundException(`Transaction not found`);
+    }
+
+    entity.status = TransactionStatus.CONCLUIDA;
+    entity.chat.user.wallet.balance += value;
+
+    await entity.save();
+    await entity.chat.user.wallet.save();
   }
 }

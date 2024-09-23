@@ -46,7 +46,7 @@ export class AppModule {
     private configService: ConfigService,
   ) {}
   
-  async onApplicationBootstrap() {
+  async onModuleInit() {
     await this.connectNgrok();
   
     const performRetractablePixCheck = this.configService.get<string>('PERFORM_RETRACTABLE_PIX_CHECK');
