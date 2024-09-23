@@ -13,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { Chat } from '../../chat/entities/chat.entity';
 import { Transaction } from '../../transaction/entities/transaction.entity';
 import { Wallet } from '../../wallet/entities/wallet.entity';
+import { generateRandomToken } from '../../utils/generateRandomToken';
 
 @Entity('user', { schema: process.env.DB_SCHEMA || 'public' })
 export class User extends BaseEntity {
@@ -46,6 +47,9 @@ export class User extends BaseEntity {
   @Column('uuid', { name: 'wallet_id' })
   walletId: string;
 
+  @Column('character varying', { name: 'api_key' })
+  apiKey: string;
+
   @OneToOne(() => Wallet, (wallet) => wallet.user)
   @JoinColumn({ name: 'wallet_id', referencedColumnName: 'id' })
   wallet: Wallet;
@@ -63,6 +67,13 @@ export class User extends BaseEntity {
   hashPassword() {
     if (!this.isGoogleLogin) {
       this.password = bcrypt.hashSync(this.password, 12);
+    }
+  }
+
+  @BeforeInsert()
+  generateApiKey() {
+    if (!this.apiKey) {
+      this.apiKey = generateRandomToken(10);
     }
   }
 
