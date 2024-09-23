@@ -13,6 +13,8 @@ import { WalletModule } from './wallet/wallet.module';
 import { PixModule } from './pix/pix.module';
 import * as Ngrok from 'ngrok';
 import { PixService } from './pix/pix.service';
+import { UserModule } from './user/user.module';
+import { UserService } from './user/user.service';
 
 @Module({
   imports: [
@@ -38,16 +40,22 @@ import { PixService } from './pix/pix.service';
     PixModule,
     TransactionModule,
     WalletModule,
+    UserModule,
   ],
 })
 export class AppModule {
   constructor(
     private pixService: PixService,
     private configService: ConfigService,
+    private userService: UserService,
   ) {}
   
   async onModuleInit() {
     await this.connectNgrok();
+
+    if (!(await this.userService.findAdmin())) {
+      await this.userService.createAdmin();
+    }
   
     const performRetractablePixCheck = this.configService.get<string>('PERFORM_RETRACTABLE_PIX_CHECK');
     if (performRetractablePixCheck.toLowerCase() === 'true') {

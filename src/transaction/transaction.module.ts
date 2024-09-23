@@ -6,7 +6,6 @@ import { Transaction } from './entities/transaction.entity';
 import { PixModule } from 'src/pix/pix.module';
 import { UserModule } from 'src/user/user.module';
 import { ChatModule } from 'src/chat/chat.module';
-import { WalletModule } from 'src/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -14,7 +13,6 @@ import { WalletModule } from 'src/wallet/wallet.module';
     PixModule,
     UserModule,
     ChatModule,
-    WalletModule,
   ],
   controllers: [TransactionController],
   providers: [TransactionService],

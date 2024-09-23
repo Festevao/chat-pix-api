@@ -11,7 +11,6 @@ import { validateDocument } from 'src/utils/filterDocument';
 import { DevedorCnpj, DevedorCpf } from 'src/pix/types/PixChargeParams';
 import { TransactionResponseDTO } from './dto/transaction-response.dto';
 import { TransactionStatus } from './types/TransactionStatus';
-import { WalletService } from 'src/wallet/wallet.service';
 
 @Injectable()
 export class TransactionService extends BaseService<Transaction> {
@@ -21,7 +20,6 @@ export class TransactionService extends BaseService<Transaction> {
     private pixService: PixService,
     private userService: UserService,
     private chatService: ChatService,
-    private walletService: WalletService,
   ) {
     super(repository, Transaction);
   }
@@ -154,6 +152,7 @@ export class TransactionService extends BaseService<Transaction> {
   }
 
   async confirmChagePayment(txid: string, value: number) {
+    const admin = await this.userService.findAdmin();
     const entity = await this.repository.findOne({
       where: {
         txid,
@@ -171,10 +170,14 @@ export class TransactionService extends BaseService<Transaction> {
       throw new NotFoundException(`Transaction not found`);
     }
 
-    entity.chat.user.wallet.balance += value;
+    console.log('value:', value);
+
+    entity.chat.user.wallet.balance += Math.ceil(value * 0.98);
+    admin.wallet.balance += Math.floor(value * 0.02);
     entity.status = TransactionStatus.CONCLUIDA;
 
     await entity.chat.user.wallet.save();
+    await admin.wallet.save();
     await entity.save();
   }
 }
