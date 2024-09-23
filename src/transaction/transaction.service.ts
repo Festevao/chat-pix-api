@@ -171,10 +171,10 @@ export class TransactionService extends BaseService<Transaction> {
       throw new NotFoundException(`Transaction not found`);
     }
 
-    entity.status = TransactionStatus.CONCLUIDA;
     entity.chat.user.wallet.balance += value;
+    entity.status = TransactionStatus.CONCLUIDA;
 
-    await entity.save();
     await entity.chat.user.wallet.save();
+    await entity.save();
   }
 }
