@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { TransactionController } from './transaction.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -12,7 +12,7 @@ import { ChatModule } from 'src/chat/chat.module';
     TypeOrmModule.forFeature([Transaction]),
     PixModule,
     UserModule,
-    ChatModule,
+    forwardRef(() => ChatModule),
   ],
   controllers: [TransactionController],
   providers: [TransactionService],

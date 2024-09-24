@@ -4,10 +4,13 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Param,
   Post,
   Put,
+  Query,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -15,6 +18,7 @@ import { CreateChatDTO } from './dto/create-chat.dto';
 import { ChatResponseDTO } from './dto/chat-response.dto';
 import { UpdateChatDTO } from './dto/update-chat.dto';
 import { matches } from 'class-validator';
+import { Public } from 'src/auth/guards/public.guard';
 
 @ApiTags('Chat')
 @ApiSecurity('Auth')
@@ -64,5 +68,33 @@ export class ChatController {
     return chats.map((chat) => {
       return new ChatResponseDTO(chat);
     });
+  }
+
+  @Get('messages/:chatId')
+  @Public()
+  async findAllMessagesByChat(
+    @Param('chatId') chatId: string,
+    @Headers('x-api-key') apikey: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    if (!chatId) {
+      throw new BadRequestException('Missing chatId param');
+    }
+    if (!apikey) {
+      throw new UnauthorizedException('Missing x-api-key header');
+    }
+    const pageNumber = page ? parseInt(page) : undefined;
+    const pageSizeNumber = pageSize ? parseInt(pageSize) : undefined;
+    
+    if (pageNumber !== undefined && isNaN(pageNumber)) {
+      throw new BadRequestException('page param must be an integer');
+    }
+
+    if (pageSizeNumber !== undefined && isNaN(pageSizeNumber)) {
+      throw new BadRequestException('pageSize param must be an integer');
+    }
+
+    return await this.chatService.findAllMessages(chatId, apikey, pageNumber, pageSizeNumber);
   }
 }

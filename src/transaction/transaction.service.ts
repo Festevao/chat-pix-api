@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { BaseService } from 'src/core/base.service';
 import { Transaction } from './entities/transaction.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,9 +17,10 @@ export class TransactionService extends BaseService<Transaction> {
   constructor(
     @InjectRepository(Transaction)
     protected readonly repository: Repository<Transaction>,
+    @Inject(forwardRef(() => ChatService)) 
+    private chatService: ChatService,
     private pixService: PixService,
     private userService: UserService,
-    private chatService: ChatService,
   ) {
     super(repository, Transaction);
   }

@@ -1,16 +1,21 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { BaseService } from '../core/base.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, QueryFailedError, Repository } from 'typeorm';
 import { Chat } from './entities/chat.entity';
 import { CreateChatDTO } from './dto/create-chat.dto';
 import { UpdateChatDTO } from './dto/update-chat.dto';
+import { TransactionStatus } from 'src/transaction/types/TransactionStatus';
+import { MessageDTO, PaginatedMessagesDTO } from './dto/message.dto';
+import { TransactionService } from 'src/transaction/transaction.service';
 
 @Injectable()
 export class ChatService extends BaseService<Chat> {
   constructor(
     @InjectRepository(Chat)
     protected readonly repository: Repository<Chat>,
+    @Inject(forwardRef(() => TransactionService)) 
+    private transactionService: TransactionService,
   ) {
     super(repository, Chat);
   }
@@ -120,4 +125,37 @@ export class ChatService extends BaseService<Chat> {
 
     return entities;
   }
+
+  async findAllMessages(chatId: string, apiKey: string, page = 1, pageSize = 10) {
+    const { items, totalItems } = await this.transactionService.paginate(
+      page,
+      pageSize,
+      {
+        chatId,
+        chat: {
+          user: {
+            apiKey,
+          },
+        },
+      },
+      { createdAt: 'DESC' },
+      { chat: true, payer: true },
+    );
+  
+    return new PaginatedMessagesDTO({
+      page,
+      pageSize,
+      hasNext: ((page - 1) * pageSize + items.length) < totalItems,
+      messages: items.map(({ message, value, createdAt, payer, chat: { name, minValue } }) => {
+        return new MessageDTO({
+          message,
+          value,
+          date: createdAt,
+          chatName: name,
+          chatMinValue: minValue,
+          payer,
+        });
+      }),
+    });
+  }  
 }

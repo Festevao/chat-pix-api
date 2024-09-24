@@ -1,4 +1,4 @@
-import { Repository, DeepPartial, FindOptionsWhere, FindOptionsOrder, Entity } from 'typeorm';
+import { Repository, DeepPartial, FindOptionsWhere, FindOptionsOrder, Entity, FindOptionsRelations } from 'typeorm';
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { BaseEntity } from './base.entity';
@@ -59,12 +59,16 @@ export abstract class BaseService<T extends BaseEntity> {
   async paginate(
     page: number = 1,
     pageSize: number = 10,
+    where?: FindOptionsWhere<T>,
     orderByColumn?: FindOptionsOrder<T>,
+    relations?: FindOptionsRelations<T>,
   ): Promise<{ items: T[]; totalItems: number }> {
     const [items, totalItems] = await this.repository.findAndCount({
+      where,
       skip: (page - 1) * pageSize,
       take: pageSize,
       order: orderByColumn,
+      relations, 
     });
 
     return { items, totalItems };
