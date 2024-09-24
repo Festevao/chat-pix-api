@@ -15,7 +15,6 @@ import * as Ngrok from 'ngrok';
 import { PixService } from './pix/pix.service';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
-import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -42,7 +41,6 @@ import { MessagesModule } from './messages/messages.module';
     TransactionModule,
     WalletModule,
     UserModule,
-    MessagesModule,
   ],
 })
 export class AppModule {
