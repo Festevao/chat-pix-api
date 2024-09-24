@@ -90,9 +90,14 @@ export class ChatController {
     if (pageNumber !== undefined && isNaN(pageNumber)) {
       throw new BadRequestException('page param must be an integer');
     }
-
     if (pageSizeNumber !== undefined && isNaN(pageSizeNumber)) {
       throw new BadRequestException('pageSize param must be an integer');
+    }
+    if (pageNumber < 1) {
+      throw new BadRequestException('page param must be bigger then 0');
+    }
+    if (pageSizeNumber < 1 || pageSizeNumber > 100) {
+      throw new BadRequestException('pageSize param must be in the range 1-100');
     }
 
     return await this.chatService.findAllMessages(chatId, apikey, pageNumber, pageSizeNumber);
